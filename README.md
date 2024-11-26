@@ -11,7 +11,9 @@ A web service that processes receipts and awards points based on predefined rule
 
 1. **Process Receipts**  
    **Path**: `/receipts/process`  
-   **Method**: `POST`  
+   **Method**: `POST`
+   Processes a receipt, calculates points based on predefined rules, and returns a unique receipt ID along with the points and a detailed breakdown.
+     
    **Request**:
    ```json
    {
@@ -27,7 +29,16 @@ A web service that processes receipts and awards points based on predefined rule
    ```
    **Response**:
    ```json
-   { "id": "7fb1377b-b223-49d9-a31a-5a02701dd310" }
+   {
+    "breakdown": [
+      "6 points - retailer name has 6 characters",
+      "5 points - 2 items (1 pairs @ 5 points each)",
+      "3 points - \"Emils Cheese Pizza\" is 18 characters (a multiple of 3)",
+      "6 points - purchase day is odd"
+    ],
+    "id": "49d5be36-8bb6-4bbb-bc05-ec70a255649f",
+    "points": 20
+   } 
    ```
 
 2. **Get Points**  
@@ -130,20 +141,32 @@ receipt-processor/
 curl -X POST http://localhost:8080/receipts/process \
 -H "Content-Type: application/json" \
 -d '{
-    "retailer": "Target",
-    "purchaseDate": "2022-01-01",
-    "purchaseTime": "13:01",
+    "retailer": "M&M Corner Market",
+    "purchaseDate": "2022-03-20",
+    "purchaseTime": "14:33",
     "items": [
-        { "shortDescription": "Mountain Dew 12PK", "price": "6.49" },
-        { "shortDescription": "Emils Cheese Pizza", "price": "12.25" }
+        { "shortDescription": "Gatorade", "price": "2.25" },
+        { "shortDescription": "Gatorade", "price": "2.25" },
+        { "shortDescription": "Gatorade", "price": "2.25" },
+        { "shortDescription": "Gatorade", "price": "2.25" }
     ],
-    "total": "18.74"
+    "total": "9.00"
 }'
 ```
 
 **Response**:
 ```json
-{ "id": "7fb1377b-b223-49d9-a31a-5a02701dd310" }
+{
+  "id": "709fed7b-d7fd-4103-8376-399dce9b01f0",
+  "points": 109,
+  "breakdown": [
+    "14 points - retailer name has 14 characters",
+    "50 points - total is a round dollar amount with no cents",
+    "25 points - total is a multiple of 0.25",
+    "10 points - 4 items (2 pairs @ 5 points each)",
+    "10 points - purchase time is between 2:00pm and 4:00pm"
+  ]
+}
 ```
 
 #### **Get Points for a Receipt**
