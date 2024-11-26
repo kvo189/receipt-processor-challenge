@@ -1,0 +1,40 @@
+# IDE specific files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+
+# Binary output directories
+bin/
+dist/
+
+# Go workspace file
+go.work
+
+# Environment files
+.env
+.env.local
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Debug files
+debug
+
+# Test coverage
+coverage.txt
+coverage.html
+
+# Log files
+*.log
