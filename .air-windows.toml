@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "tmp/main"  # Use forward slashes and remove .exe
-  cmd = "go build -o ./tmp/main ./cmd/main.go"  # Adjust for macOS
+  bin = "tmp\\main.exe"
+  cmd = "go build -o ./tmp/main.exe ./cmd/main.go"  # Specify the build command
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

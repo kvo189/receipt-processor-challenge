@@ -2,28 +2,18 @@ package main
 
 import (
 	"log"
+	"math/rand"
 	"net/http"
-
 	"receipt-processor/internal/handlers"
 	"receipt-processor/internal/store"
+	"strconv"
 )
 
 func main() {
 	// Preload sample receipts
-	store.SaveReceipt("1", 32)
-	store.SaveReceipt("2", 45)
-	store.SaveReceipt("3", 45)
-	store.SaveReceipt("4", 45)
-	store.SaveReceipt("5", 45)
-	store.SaveReceipt("6", 45)
-	store.SaveReceipt("7", 45)
-	store.SaveReceipt("8", 45)
-	store.SaveReceipt("9", 45)
-	store.SaveReceipt("10", 45)
-	store.SaveReceipt("11", 45)
-
-	// Debug: Print the store contents
-	log.Println("Preloaded receipts:", store.DebugStore())
+	for i := range 15 {
+		store.SaveReceipt(strconv.Itoa(i), rand.Intn(100))
+	}
 
 	// Register routes
 	http.HandleFunc("/receipts/", handlers.GetPoints)

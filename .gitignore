@@ -24,6 +24,7 @@ go.work
 # Environment files
 .env
 .env.local
+tmp
 
 # OS specific
 .DS_Store

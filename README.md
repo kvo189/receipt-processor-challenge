@@ -187,15 +187,23 @@ curl "http://localhost:8080/receipts/all?limit=2&offset=0"
 **Response**:
 ```json
 {
-  "receipts": {
-    "1": 32,
-    "2": 45
-  },
-  "total": 11,
-  "limit": 2,
-  "offset": 0,
-  "currentPage": 1,
-  "totalPages": 6
+    "currentPage": 3,
+    "limit": 2,
+    "offset": 5,
+    "receipts": [
+        {
+            "ID": "5",
+            "Point": 27,
+            "CreatedDate": "2024-12-10T11:05:39.511837-05:00"
+        },
+        {
+            "ID": "6",
+            "Point": 11,
+            "CreatedDate": "2024-12-10T11:05:39.511837-05:00"
+        }
+    ],
+    "total": 15,
+    "totalPages": 8
 }
 ```
 
