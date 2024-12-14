@@ -13,6 +13,15 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	RoundDollarPoints   = 50  // Points for round dollar totals
+	MultipleOfQuarter   = 25  // Points for totals that are multiples of 0.25
+	OddDayPoints        = 6   // Points for receipts purchased on odd days
+	TimeBonusPoints     = 10  // Points for purchases made between 2:00 PM and 4:00 PM
+	PointsPerItemPair   = 5   // Points awarded for every pair of items on the receipt
+	DescriptionPointMul = 0.2 // Percentage of the item's price awarded for descriptions that are multiples of 3
+)
+
 // ProcessReceipt handles receipt processing.
 func ProcessReceipt(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -45,68 +54,127 @@ func calculatePoints(receipt models.Receipt) (int, []string) {
 	points := 0
 	breakdown := []string{}
 
-	// Convert the receipt.Total to a float64
-	total, err := strconv.ParseFloat(receipt.Total, 64)
-	if err != nil {
-		return points, append(breakdown, "Invalid total, 0 points awarded")
-	}
+	// Retailer points
+	retailerPoints, retailerBreakdown := calculateRetailerPoints(receipt.Retailer)
+	points += retailerPoints
+	breakdown = append(breakdown, retailerBreakdown...)
 
-	// One point for every alphanumeric character in the retailer name
-	retailerPoints := 0
-	for _, char := range receipt.Retailer {
+	// Total points
+	totalPoints, totalBreakdown := calculateTotalPoints(receipt.Total)
+	points += totalPoints
+	breakdown = append(breakdown, totalBreakdown...)
+
+	// Item points
+	itemPoints, itemBreakdown := calculateItemPoints(receipt.Items)
+	points += itemPoints
+	breakdown = append(breakdown, itemBreakdown...)
+
+	// Date points
+	datePoints, dateBreakdown := calculateDatePoints(receipt.PurchaseDate)
+	points += datePoints
+	breakdown = append(breakdown, dateBreakdown...)
+
+	// Time points
+	timePoints, timeBreakdown := calculateTimePoints(receipt.PurchaseTime)
+	points += timePoints
+	breakdown = append(breakdown, timeBreakdown...)
+
+	return points, breakdown
+}
+
+// calculateRetailerPoints calculates points based on the retailer's name.
+func calculateRetailerPoints(retailer string) (int, []string) {
+	points := 0
+	for _, char := range retailer {
 		if (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') {
-			retailerPoints++
+			points++
 		}
 	}
-	points += retailerPoints
-	breakdown = append(breakdown, strconv.Itoa(retailerPoints)+" points - retailer name has "+strconv.Itoa(retailerPoints)+" characters")
+	breakdown := []string{strconv.Itoa(points) + " points - retailer name has " + strconv.Itoa(points) + " alphanumeric characters"}
+	return points, breakdown
+}
 
-	// 50 points if the total is a round dollar amount with no cents
+// calculateTotalPoints calculates points based on the receipt's total amount.
+func calculateTotalPoints(totalStr string) (int, []string) {
+	points := 0
+	breakdown := []string{}
+	total, err := strconv.ParseFloat(totalStr, 64)
+	if err != nil {
+		breakdown = append(breakdown, "Invalid total, 0 points awarded")
+		return points, breakdown
+	}
+
 	if math.Mod(total, 1.0) == 0 {
-		points += 50
-		breakdown = append(breakdown, "50 points - total is a round dollar amount with no cents")
+		points += RoundDollarPoints
+		breakdown = append(breakdown, strconv.Itoa(RoundDollarPoints)+" points - total is a round dollar amount with no cents")
 	}
-
-	// 25 points if the total is a multiple of 0.25
 	if int(total*100)%25 == 0 {
-		points += 25
-		breakdown = append(breakdown, "25 points - total is a multiple of 0.25")
+		points += MultipleOfQuarter
+		breakdown = append(breakdown, strconv.Itoa(MultipleOfQuarter)+" points - total is a multiple of 0.25")
 	}
+	return points, breakdown
+}
 
-	// 5 points for every two items on the receipt
-	itemPoints := (len(receipt.Items) / 2) * 5
-	points += itemPoints
-	breakdown = append(breakdown, strconv.Itoa(itemPoints)+" points - "+strconv.Itoa(len(receipt.Items))+" items ("+strconv.Itoa(len(receipt.Items)/2)+" pairs @ 5 points each)")
+// calculateItemPoints calculates points based on the receipt's items.
+func calculateItemPoints(items []models.Item) (int, []string) {
+	points := 0
+	breakdown := []string{}
 
-	// Points for item descriptions that are multiples of 3
-	for _, item := range receipt.Items {
+	// Points for item pairs
+	itemPairs := len(items) / 2
+	points += itemPairs * PointsPerItemPair
+	breakdown = append(breakdown, strconv.Itoa(itemPairs*PointsPerItemPair)+" points - "+strconv.Itoa(len(items))+" items ("+strconv.Itoa(itemPairs)+" pairs @ "+strconv.Itoa(PointsPerItemPair)+" points each)")
+
+	// Points for item descriptions
+	for _, item := range items {
 		trimmedLen := len(strings.TrimSpace(item.ShortDescription))
 		if trimmedLen%3 == 0 {
 			itemPrice, err := strconv.ParseFloat(item.Price, 64)
 			if err == nil {
-				descriptionPoints := int(math.Ceil(itemPrice * 0.2))
+				descriptionPoints := int(math.Ceil(itemPrice * DescriptionPointMul))
 				points += descriptionPoints
 				breakdown = append(breakdown, strconv.Itoa(descriptionPoints)+" points - \""+strings.TrimSpace(item.ShortDescription)+"\" is "+strconv.Itoa(trimmedLen)+" characters (a multiple of 3)")
+			} else {
+				breakdown = append(breakdown, "Invalid price for item \""+item.ShortDescription+"\", no points awarded")
 			}
 		}
 	}
+	return points, breakdown
+}
 
-	// 6 points if the day in the purchase date is odd
-	purchaseDate, _ := time.Parse("2006-01-02", receipt.PurchaseDate)
-	if purchaseDate.Day()%2 == 1 {
-		points += 6
-		breakdown = append(breakdown, "6 points - purchase day is odd")
+// calculateDatePoints calculates points based on the receipt's purchase date.
+func calculateDatePoints(purchaseDate string) (int, []string) {
+	points := 0
+	breakdown := []string{}
+	parsedDate, err := time.Parse("2006-01-02", purchaseDate)
+	if err != nil {
+		breakdown = append(breakdown, "Invalid purchase date, 0 points awarded")
+		return points, breakdown
 	}
 
-	// 10 points if the time of purchase is after 2:00pm and before 4:00pm
-	purchaseTime, _ := time.Parse("15:04", receipt.PurchaseTime)
-	targetStart, _ := time.Parse("15:04", "14:00")
-	targetEnd, _ := time.Parse("15:04", "16:00")
+	if parsedDate.Day()%2 == 1 {
+		points += OddDayPoints
+		breakdown = append(breakdown, strconv.Itoa(OddDayPoints)+" points - purchase day is odd")
+	}
+	return points, breakdown
+}
 
-	if purchaseTime.After(targetStart) && purchaseTime.Before(targetEnd) {
-		points += 10
-		breakdown = append(breakdown, "10 points - purchase time is between 2:00pm and 4:00pm")
+// calculateTimePoints calculates points based on the receipt's purchase time.
+func calculateTimePoints(purchaseTime string) (int, []string) {
+	points := 0
+	breakdown := []string{}
+	parsedTime, err := time.Parse("15:04", purchaseTime)
+	if err != nil {
+		breakdown = append(breakdown, "Invalid purchase time, 0 points awarded")
+		return points, breakdown
 	}
 
+	startTime, _ := time.Parse("15:04", "14:00")
+	endTime, _ := time.Parse("15:04", "16:00")
+
+	if parsedTime.After(startTime) && parsedTime.Before(endTime) {
+		points += TimeBonusPoints
+		breakdown = append(breakdown, strconv.Itoa(TimeBonusPoints)+" points - purchase time is between 2:00pm and 4:00pm")
+	}
 	return points, breakdown
 }

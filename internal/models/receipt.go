@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Receipt struct {
 	ID           string `json:"id"`
 	Retailer     string `json:"retailer"`
@@ -12,4 +14,10 @@ type Receipt struct {
 type Item struct {
 	ShortDescription string `json:"shortDescription"`
 	Price            string `json:"price"`
+}
+
+type ReceiptStore struct {
+	ID          string
+	Point       int
+	CreatedDate time.Time
 }

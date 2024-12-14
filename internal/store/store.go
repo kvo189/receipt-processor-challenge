@@ -1,19 +1,14 @@
 package store
 
 import (
+	"receipt-processor/internal/models"
 	"sort"
 	"sync"
 	"time"
 )
 
-type ReceiptStore struct {
-	ID          string
-	Point       int
-	CreatedDate time.Time
-}
-
 var (
-	receiptStore = make(map[string]ReceiptStore)
+	receiptStore = make(map[string]models.ReceiptStore)
 	mu           sync.Mutex
 )
 
@@ -23,7 +18,7 @@ var (
 func SaveReceipt(id string, point int) {
 	mu.Lock()
 	defer mu.Unlock()
-	receiptStore[id] = ReceiptStore{
+	receiptStore[id] = models.ReceiptStore{
 		ID:          id,
 		Point:       point,
 		CreatedDate: time.Now(),
@@ -52,12 +47,12 @@ func GetPoints(id string) (int, bool) {
 //	int: total number of receipts in store
 //
 // Thread-safe using mutex locking
-func GetAllReceipts(limit int, offset int) ([]ReceiptStore, int) {
+func GetAllReceipts(limit int, offset int) ([]models.ReceiptStore, int) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	// convert map to array for sorting
-	result := make([]ReceiptStore, 0, len(receiptStore))
+	result := make([]models.ReceiptStore, 0, len(receiptStore))
 	for _, v := range receiptStore {
 		result = append(result, v)
 	}
@@ -72,7 +67,7 @@ func GetAllReceipts(limit int, offset int) ([]ReceiptStore, int) {
 	end := start + limit
 
 	if start > offset {
-		return []ReceiptStore{}, total
+		return []models.ReceiptStore{}, total
 	}
 
 	if end > total {
