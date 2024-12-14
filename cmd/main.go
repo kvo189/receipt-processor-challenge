@@ -16,7 +16,7 @@ func main() {
 	}
 
 	// Register routes
-	http.HandleFunc("/receipts/", handlers.GetPoints)
+	http.HandleFunc("/receipts/{id}/points", handlers.GetPoints)
 	http.HandleFunc("/receipts/all", handlers.GetAllReceipts) // New endpoint for all receipts
 	http.HandleFunc("/receipts/process", handlers.ProcessReceipt)
 

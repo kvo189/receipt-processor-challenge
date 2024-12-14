@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"receipt-processor/internal/store"
-	"strings"
 )
 
 // GetPoints handles fetching points for a receipt by ID.
@@ -15,10 +13,7 @@ func GetPoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract the receipt ID from the URL
-	id := strings.TrimPrefix(r.URL.Path, "/receipts/")
-	id = strings.Split(id, "/")[0]
-	log.Println("Request ID:", id)
+	id := r.PathValue("id")
 
 	// Fetch points from the store
 	points, exists := store.GetPoints(id)
