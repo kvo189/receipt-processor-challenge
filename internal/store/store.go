@@ -14,7 +14,6 @@ var (
 
 // SaveReceipt stores a new receipt with the given ID and point value
 // The receipt is stored with the current timestamp as CreatedDate
-// Thread-safe using mutex locking
 func SaveReceipt(id string, point int) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -27,7 +26,6 @@ func SaveReceipt(id string, point int) {
 
 // GetPoints retrieves the point value for a receipt with the given ID
 // Returns the point value and a boolean indicating if the receipt exists
-// Thread-safe using mutex locking
 func GetPoints(id string) (int, bool) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -36,17 +34,6 @@ func GetPoints(id string) (int, bool) {
 }
 
 // GetAllReceipts retrieves a paginated list of receipts sorted by creation date
-// Parameters:
-//
-//	limit: maximum number of receipts to return
-//	offset: number of receipts to skip
-//
-// Returns:
-//
-//	[]ReceiptStore: slice of receipts for the requested page
-//	int: total number of receipts in store
-//
-// Thread-safe using mutex locking
 func GetAllReceipts(limit int, offset int) ([]models.ReceiptStore, int) {
 	mu.Lock()
 	defer mu.Unlock()
