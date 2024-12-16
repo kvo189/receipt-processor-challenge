@@ -63,3 +63,10 @@ func GetAllReceipts(limit int, offset int) ([]models.ReceiptStore, int) {
 
 	return result[start:end], total
 }
+
+// ResetStore clears all data in the store. Useful for testing.
+func ResetStore() {
+	mu.Lock()
+	defer mu.Unlock()
+	receiptStore = make(map[string]models.ReceiptStore)
+}
