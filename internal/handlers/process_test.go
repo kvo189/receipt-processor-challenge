@@ -68,3 +68,29 @@ func TestProcessReceipt_Success(t *testing.T) {
 		t.Errorf("Expected a breakdown in the response, got: %v", response)
 	}
 }
+
+func TestCalculatePoints(t *testing.T) {
+	// Arrange: Create a sample receipt
+	receipt := models.Receipt{
+		Retailer:     "Target",
+		PurchaseDate: "2022-01-01",
+		PurchaseTime: "13:01",
+		Total:        "35.35",
+		Items: []models.Item{
+			{ShortDescription: "Mountain Dew 12PK", Price: "6.49"},
+			{ShortDescription: "Emils Cheese Pizza", Price: "12.25"},
+			{ShortDescription: "Knorr Creamy Chicken", Price: "1.26"},
+			{ShortDescription: "Doritos Nacho Cheese", Price: "3.35"},
+			{ShortDescription: "   Klarbrunn 12-PK 12 FL OZ  ", Price: "12.00"},
+		},
+	}
+
+	// Act: Calculate points
+	points, _ := handlers.CalculatePoints(receipt)
+
+	// Assert: Check total points
+	expectedPoints := 28
+	if points != expectedPoints {
+		t.Errorf("Expected total points to be %d, got %d", expectedPoints, points)
+	}
+}

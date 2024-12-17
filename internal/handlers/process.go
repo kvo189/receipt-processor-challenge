@@ -36,7 +36,7 @@ func ProcessReceipt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	receiptID := uuid.NewString()
-	points, breakdown := calculatePoints(receipt)
+	points, breakdown := CalculatePoints(receipt)
 	store.SaveReceipt(receiptID, points)
 
 	// Respond with the ID and breakdown
@@ -50,7 +50,7 @@ func ProcessReceipt(w http.ResponseWriter, r *http.Request) {
 }
 
 // calculatePoints calculates the total points and returns a detailed breakdown.
-func calculatePoints(receipt models.Receipt) (int, []string) {
+func CalculatePoints(receipt models.Receipt) (int, []string) {
 	points := 0
 	breakdown := []string{}
 
